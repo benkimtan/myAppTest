@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.MyTestApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Change 'android:Theme.Material' to 'Theme.AppCompat' -->
+    <style name="Theme.MyTestApp" parent="Theme.AppCompat.Light.NoActionBar" />
 </resources>
