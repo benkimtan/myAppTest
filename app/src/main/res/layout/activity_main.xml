@@ -7,16 +7,30 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
+    <!-- Dynamic Add Button (New Feature) -->
+    <Button
+        android:id="@+id/add_transaction_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add"
+        android:backgroundTint="#007bff"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/original_content_container"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Container for Original Content (TextView and 2 Buttons) -->
     <LinearLayout
+        android:id="@+id/original_content_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:gravity="center_horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/add_transaction_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Original Greeting Message View -->
         <TextView
             android:id="@+id/hello_message_view"
             android:layout_width="wrap_content"
@@ -25,18 +39,19 @@
             android:textSize="24sp"
             android:layout_marginBottom="24dp"/>
 
+        <!-- Original Two Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"> <!-- Changed to center for better button alignment -->
+            android:gravity="center">
 
             <Button
                 android:id="@+id/hello_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hello World"
-                android:backgroundTint="#4CAF50" /> <!-- Use backgroundTint for modern Material buttons -->
+                android:backgroundTint="#4CAF50" />
 
             <Button
                 android:id="@+id/remove_button"
@@ -47,5 +62,17 @@
                 android:backgroundTint="#2a6394" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Transaction List Container: RecyclerView (Takes remaining space) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/transaction_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        android:focusableInTouchMode="true"
+        app:layout_constraintTop_toBottomOf="@id/original_content_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/transaction_row"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
