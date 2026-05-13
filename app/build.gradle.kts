@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.devtools.ksp) // Added KSP Plugin
 }
 
 android {
@@ -40,6 +41,14 @@ android {
 }
 
 dependencies {
+    // Add this to provide the @Inject annotation
+    implementation(libs.javax.inject)
+
+    // Room Dependencies
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
