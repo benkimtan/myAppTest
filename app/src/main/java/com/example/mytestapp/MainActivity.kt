@@ -9,8 +9,11 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     // Original Views
@@ -20,8 +23,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var addTransactionButton: Button
     private lateinit var transactionRecyclerView: RecyclerView
 
-    // State Management
-    private val transactions = mutableListOf<Transaction>()
+    // Dependencies (Using simple implementation for now, assumes Hilt setup later)
+    private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var transactionAdapter: TransactionAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,23 +36,42 @@ class MainActivity : AppCompatActivity() {
         helloMessageView = findViewById(R.id.hello_message_view)
         removeButton = findViewById(R.id.remove_button)
         val helloButton: Button = findViewById(R.id.hello_button)
-        addTransactionButton = findViewById(R.id.add_transaction_button) // New View
-        transactionRecyclerView = findViewById(R.id.transaction_recycler_view) // New View
+        addTransactionButton = findViewById(R.id.add_transaction_button)
+        transactionRecyclerView = findViewById(R.id.transaction_recycler_view)
 
-        // 2. Setup Transaction RecyclerView
+        // 2. Initialize ViewModel (Simplified manual injection for this scope)
+        // NOTE: In a real app, Hilt/DI should provide this.
+        val repository = TransactionRepository(
+            (application as MyApplication).database.transactionDao()
+        )
+        transactionViewModel = TransactionViewModel(repository)
+
+        // 3. Setup Transaction RecyclerView and Flow observation
         setupRecyclerView()
+        setupTransactionFlowObservation()
 
-        // 3. Set up listeners
+        // 4. Set up listeners
         setupListeners(helloButton)
-        setupAddButtonListener() // New Listener
+        setupAddButtonListener()
+    }
+
+    private fun setupTransactionFlowObservation() {
+        // Collect transactions from the ViewModel flow and update the adapter whenever data changes
+        lifecycleScope.launch {
+            transactionViewModel.allTransactions.collectLatest { transactions ->
+                // Update the adapter's dataset and notify the change
+                transactionAdapter.submitList(transactions)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
-        // Initialize adapter and set it to the RecyclerView
-        transactionAdapter = TransactionAdapter(transactions) { transaction, position ->
-            // Callback when a delete button is clicked
-            showDeleteConfirmation(transaction, position)
-        }
+        // Initialize adapter, passing the delete confirmation callback.
+        transactionAdapter = TransactionAdapter(
+            lifecycleScope,
+            transactionViewModel,
+            this::showDeleteConfirmation
+        )
         transactionRecyclerView.adapter = transactionAdapter
         transactionRecyclerView.layoutManager = LinearLayoutManager(this)
     }
@@ -64,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         // 1. Create the container
         val dialogView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(50, 40, 50, 10) // Improved padding
+            setPadding(50, 40, 50, 10)
         }
 
         // 2. Create only the inputs (remove the bottomLayout and manual buttons)
@@ -91,9 +113,13 @@ class MainActivity : AppCompatActivity() {
                 if (ticker.isNotEmpty() && quantityString.isNotEmpty()) {
                     val quantity = quantityString.toIntOrNull() ?: 0
                     if (quantity > 0) {
-                        val newTransaction = Transaction(ticker, quantity)
-                        transactions.add(newTransaction)
-                        transactionAdapter.notifyItemInserted(transactions.size - 1)
+                        // Create transaction, ensuring we pass a dummy ID since the DB handles it
+                        val newTransaction = Transaction(ticker= ticker, quantity = quantity)
+
+                        // 💡 CORE CHANGE: Use ViewModel to persist data
+                        lifecycleScope.launch {
+                            transactionViewModel.addTransaction(newTransaction)
+                        }
                     } else {
                         Toast.makeText(this, "Invalid quantity", Toast.LENGTH_SHORT).show()
                     }
@@ -108,15 +134,15 @@ class MainActivity : AppCompatActivity() {
     private fun showDeleteConfirmation(transaction: Transaction, position: Int) {
         AlertDialog.Builder(this)
             .setTitle("Confirm Delete")
-            .setMessage("Are you sure you want to delete the transaction (${transaction.ticker}, ${transaction.quantity})?")
+            .setMessage("Are you sure you want to delete the transaction (${transaction.ticker}, ${transaction.quantity})? This action is permanent.")
             .setPositiveButton("Yes") { dialog, which ->
-                // Action: Remove item and update UI
-                transactions.removeAt(position)
-                transactionAdapter.notifyItemRemoved(position)
-                Toast.makeText(this, "Transaction deleted.", Toast.LENGTH_SHORT).show()
+                // 💡 CORE CHANGE: Use ViewModel to delete data by ID
+                lifecycleScope.launch {
+                    transactionViewModel.deleteTransaction(transaction.id)
+                }
+                dialog.dismiss()
             }
             .setNegativeButton("No") { dialog, which ->
-                // Action: Dismiss dialog with no changes
                 dialog.cancel()
             }
             .show()

@@ -6,15 +6,23 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.lang.Exception
+import androidx.recyclerview.widget.ListAdapter
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * Adapter for the RecyclerView to display transaction rows.
  */
 class TransactionAdapter(
-    private val transactions: MutableList<Transaction>,
-    private val deleteListener: (Transaction, Int) -> Unit
-) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
+    private val scope: CoroutineScope,
+    private val viewModel: TransactionViewModel,
+    private val onDeleteClicked: (Transaction, Int) -> Unit // New callback dependency
+) : ListAdapter<Transaction, TransactionAdapter.TransactionViewHolder>(TransactionDiffCallback()) {
+//    private var transactions: List<Transaction> = emptyList()
+
+    // --- Private methods (Keep ViewHolder and etc. logic) ---
+// Note: ViewHolder definition remains unchanged.
+// The binding logic will now use the transaction ID for deletion.
+// -------------------------------------------------------------
 
     // ViewHolder class to hold the views for a single transaction row
     class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -28,17 +36,23 @@ class TransactionAdapter(
     }
 
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
-        val transaction = transactions[position]
+        val transaction = getItem(position)
         holder.detailsText.text = "${transaction.ticker} - ${transaction.quantity}"
 
         // Set up the delete button listener
         holder.deleteButton.setOnClickListener {
             // Pass the transaction object and its adapter position to the delete listener callback
-            deleteListener(transaction, position)
+            onDeleteClicked(transaction, position)
         }
     }
+}
 
-    override fun getItemCount(): Int {
-        return transactions.size
+class TransactionDiffCallback : androidx.recyclerview.widget.DiffUtil.ItemCallback<Transaction>() {
+    override fun areItemsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
+        return oldItem.id == newItem.id // Checks if it's the same row
+    }
+
+    override fun areContentsTheSame(oldItem: Transaction, newItem: Transaction): Boolean {
+        return oldItem == newItem // Checks if the data inside the row changed
     }
 }

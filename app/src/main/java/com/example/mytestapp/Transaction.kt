@@ -1,11 +1,16 @@
 package com.example.mytestapp
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Data class representing a financial transaction.
- * @param ticker The stock ticker symbol (e.g., AAPL).
- * @param quantity The number of shares bought/sold.
+ * Converted to a Room Entity for persistent storage.
  */
+@Entity(tableName = "transactions")
 data class Transaction(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0, // Added primary key
     val ticker: String,
     val quantity: Int
 )
