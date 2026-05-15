@@ -2,21 +2,15 @@ package com.example.mytestapp
 
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import android.widget.Spinner
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
+
+import android.os.Bundle
+import android.view.View
+import android.widget.*
 
 class MainActivity : AppCompatActivity() {
     // Original Views
@@ -68,28 +62,28 @@ class MainActivity : AppCompatActivity() {
         viewSelectorSpinner.adapter = spinnerAdapter
         viewSelectorSpinner.setSelection(0) // default to "Hello World"
 
-viewSelectorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-        when (position) {
-            0 -> {
-                // Hello World view
-                originalContentContainer.visibility = View.VISIBLE
-                transactionRecyclerView.visibility = View.GONE
-                addTransactionButton.visibility = View.GONE
+        viewSelectorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                when (position) {
+                    0 -> {
+                        // Hello World view
+                        originalContentContainer.visibility = View.VISIBLE
+                        transactionRecyclerView.visibility = View.GONE
+                        addTransactionButton.visibility = View.GONE
+                    }
+                    1 -> {
+                        // Ticker Tracker view
+                        originalContentContainer.visibility = View.GONE
+                        transactionRecyclerView.visibility = View.VISIBLE
+                        addTransactionButton.visibility = View.VISIBLE
+                    }
+                }
             }
-            1 -> {
-                // Ticker Tracker view
-                originalContentContainer.visibility = View.GONE
-                transactionRecyclerView.visibility = View.VISIBLE
-                addTransactionButton.visibility = View.VISIBLE
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // No action needed
             }
         }
-    }
-
-    override fun onNothingSelected(parent: AdapterView<*>) {
-        // No action needed
-    }
-}
     }
 
     private fun setupTransactionFlowObservation() {
@@ -171,7 +165,7 @@ viewSelectorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelected
     private fun showDeleteConfirmation(transaction: Transaction, position: Int) {
         AlertDialog.Builder(this)
             .setTitle("Confirm Delete")
-            .setMessage("Are you sure you want to delete the transaction (${transaction.ticker}, ${transaction.quantity})? This action is permanent.")
+.setMessage("Are you sure you want to delete the transaction (${transaction.ticker}, ${transaction.quantity})? " + "This action is permanent.")
             .setPositiveButton("Yes") { dialog, which ->
                 // 💡 CORE CHANGE: Use ViewModel to delete data by ID
                 lifecycleScope.launch {
