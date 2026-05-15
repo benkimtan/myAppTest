@@ -14,6 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import android.widget.Spinner
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 
 class MainActivity : AppCompatActivity() {
     // Original Views
@@ -22,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     // New Feature Views
     private lateinit var addTransactionButton: Button
     private lateinit var transactionRecyclerView: RecyclerView
+    private lateinit var viewSelectorSpinner: Spinner
+    private lateinit var originalContentContainer: LinearLayout
 
     // Dependencies (Using simple implementation for now, assumes Hilt setup later)
     private lateinit var transactionViewModel: TransactionViewModel
@@ -38,6 +43,8 @@ class MainActivity : AppCompatActivity() {
         val helloButton: Button = findViewById(R.id.hello_button)
         addTransactionButton = findViewById(R.id.add_transaction_button)
         transactionRecyclerView = findViewById(R.id.transaction_recycler_view)
+        viewSelectorSpinner = findViewById(R.id.view_selector_spinner)
+        originalContentContainer = findViewById(R.id.original_content_container)
 
         // 2. Initialize ViewModel (Simplified manual injection for this scope)
         // NOTE: In a real app, Hilt/DI should provide this.
@@ -53,6 +60,36 @@ class MainActivity : AppCompatActivity() {
         // 4. Set up listeners
         setupListeners(helloButton)
         setupAddButtonListener()
+
+        // Configure the view selector spinner
+        val spinnerItems = listOf("Hello World", "Ticker Tracker")
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, spinnerItems)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        viewSelectorSpinner.adapter = spinnerAdapter
+        viewSelectorSpinner.setSelection(0) // default to "Hello World"
+
+viewSelectorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+        when (position) {
+            0 -> {
+                // Hello World view
+                originalContentContainer.visibility = View.VISIBLE
+                transactionRecyclerView.visibility = View.GONE
+                addTransactionButton.visibility = View.GONE
+            }
+            1 -> {
+                // Ticker Tracker view
+                originalContentContainer.visibility = View.GONE
+                transactionRecyclerView.visibility = View.VISIBLE
+                addTransactionButton.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>) {
+        // No action needed
+    }
+}
     }
 
     private fun setupTransactionFlowObservation() {
